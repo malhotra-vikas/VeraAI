@@ -2,13 +2,16 @@ document.addEventListener('DOMContentLoaded', function () {
     console.log("Popup DOM content loaded.");
 
     // Retrieve the selected text from storage
-    chrome.storage.local.get(['selectedText'], function (result) {
+    chrome.storage.local.get(['selectedText', 'url'], function (result) {
         const selectedText = result.selectedText || 'No text selected';
+        const pageUrl = result.url || 'No URL available';
+
         console.log("Retrieved selected text from storage: ", selectedText);
+        console.log("Retrieved URL from storage: ", pageUrl);
 
         // Example dynamic data (replace with your actual data source)
         const dynamicData = {
-            url: 'https://edition.cnn.com/',
+            url: pageUrl,
             accuracyScore: '82%',
             quote: selectedText,
             sources: [
@@ -22,21 +25,25 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Populate the popup with dynamic data
         document.getElementById('url').innerText = dynamicData.url;
-        document.getElementById('accuracy-score').innerText = dynamicData.accuracyScore;
         document.getElementById('quote').innerText = dynamicData.quote;
 
-        const sourceList = document.getElementById('source-list');
-        dynamicData.sources.forEach(source => {
-            const li = document.createElement('li');
-            const a = document.createElement('a');
-            a.href = source.url;
-            a.target = '_blank';
-            a.innerText = source.url;
-            li.appendChild(a);
-            li.appendChild(document.createTextNode(` References found: ${source.references}`));
-            sourceList.appendChild(li);
-        });
+        setTimeout(() => {
 
-        document.getElementById('summary').innerHTML = dynamicData.summary;
+            document.getElementById('accuracy-score').innerText = dynamicData.accuracyScore;
+
+            const sourceList = document.getElementById('source-list');
+            dynamicData.sources.forEach(source => {
+                const li = document.createElement('li');
+                const a = document.createElement('a');
+                a.href = source.url;
+                a.target = '_blank';
+                a.innerText = source.url;
+                li.appendChild(a);
+                li.appendChild(document.createTextNode(` References found: ${source.references}`));
+                sourceList.appendChild(li);
+            });
+
+            document.getElementById('summary').innerHTML = dynamicData.summary;
+        }, 5000); // 15000 milliseconds delay        
     });
 });
