@@ -2,7 +2,8 @@ body {
     font-family: Arial, sans-serif;
     margin: 0;
     padding: 0;
-    width: 500px;
+    width: 350px;
+    background-color: #fff;
 }
 
 .container {
@@ -24,6 +25,7 @@ body {
 .title {
     font-size: 20px;
     font-weight: bold;
+    margin-left: 10px;
 }
 
 .settings-icon {
@@ -36,21 +38,26 @@ body {
     background-color: #f9f9f9;
     padding: 10px;
     border-radius: 8px;
+    border: 1px solid #ddd;
 }
 
 .url {
     font-size: 12px;
     color: #555;
     margin-bottom: 10px;
+    word-wrap: break-word;
 }
 
 .accuracy-score-section {
+    display: flex;
+    align-items: center;
     margin-bottom: 10px;
 }
 
 .accuracy-score {
     display: flex;
     align-items: center;
+    margin-right: 10px;
 }
 
 .score-circle {
@@ -64,12 +71,13 @@ body {
     color: white;
     font-size: 18px;
     font-weight: bold;
-    margin-right: 10px;
+    flex-shrink: 0;
 }
 
 .quote {
     font-size: 14px;
     color: #333;
+    margin: 0;
 }
 
 .sources {
@@ -84,6 +92,7 @@ body {
 ul {
     list-style: none;
     padding: 0;
+    margin: 0;
 }
 
 li {
@@ -94,6 +103,7 @@ li {
 a {
     text-decoration: none;
     color: #1a0dab;
+    word-wrap: break-word;
 }
 
 a:hover {
