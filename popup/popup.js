@@ -1,8 +1,10 @@
+console.debug("popup.js script loaded.");
+
 document.addEventListener('DOMContentLoaded', function () {
     console.log("Popup DOM content loaded.");
 
     // Retrieve the selected text from storage
-    chrome.storage.local.get(['selectedText', 'url'], function (result) {
+    chrome.storage.local.get(['selectedText', 'url'], async function (result) {
         const selectedText = result.selectedText || 'No text selected';
         const pageUrl = result.url || 'No URL available';
 
@@ -27,23 +29,84 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('url').innerText = dynamicData.url;
         document.getElementById('quote').innerText = dynamicData.quote;
 
-        setTimeout(() => {
-
-            document.getElementById('accuracy-score').innerText = dynamicData.accuracyScore;
-
-            const sourceList = document.getElementById('source-list');
-            dynamicData.sources.forEach(source => {
-                const li = document.createElement('li');
-                const a = document.createElement('a');
-                a.href = source.url;
-                a.target = '_blank';
-                a.innerText = source.url;
-                li.appendChild(a);
-                li.appendChild(document.createTextNode(` References found: ${source.references}`));
-                sourceList.appendChild(li);
-            });
-
-            document.getElementById('summary').innerHTML = dynamicData.summary;
-        }, 5000); // 15000 milliseconds delay        
+        // Call the function to update the popup with dynamic data
+        updateDynamicData(dynamicData, selectedText);
     });
 });
+
+async function updateDynamicData(dynamicData, selectedText) {
+    // Call OpenAI to summarize the quote
+    const summarizedQuote = await summarizeQuoteWithOpenAI(selectedText);
+
+    // Populate the popup with dynamic data
+    document.getElementById('accuracy-score').innerText = '32%';
+
+    const sourceList = document.getElementById('source-list');
+    sourceList.innerHTML = ''; // Clear existing sources if any
+    dynamicData.sources.forEach(source => {
+        const li = document.createElement('li');
+        const a = document.createElement('a');
+        a.href = source.url;
+        a.target = '_blank';
+        a.innerText = source.url;
+        li.appendChild(a);
+        li.appendChild(document.createTextNode(` References found: ${source.references}`));
+        sourceList.appendChild(li);
+    });
+
+    document.getElementById('summary').innerHTML = summarizedQuote;
+}
+
+
+async function summarizeQuoteWithOpenAI(quote) {
+    try {
+        // Replace with your OpenAI API key
+        const apiKey = "SOME KEY"; // Replace this is a Test Key
+
+        // OpenAI API endpoint
+        const url = 'https://api.openai.com/v1/chat/completions';
+
+        // Request payload
+        const data = {
+            prompt: `Summarize the following text:\n\n${quote}\n`,
+            max_tokens: 100
+        };
+    
+        const body = JSON.stringify({
+            model: "gpt-3.5-turbo",
+            messages: [
+                { role: "system", content: "You are a helpful assistant." },
+                { role: "user", content: `Summarize the following text:\n\n${quote}` }
+            ],
+            max_tokens: 200
+        });
+        
+        console.debug("OpenAI API Body: ", JSON.stringify(body, null, 2));
+
+        // Request headers
+        const headers = {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${apiKey}`
+        };
+        console.debug("OpenAI API Header: ", JSON.stringify(headers, null, 2));
+
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: headers,
+            body: body
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+    
+        const responseData = await response.json();
+
+        console.debug("OpenAI API response: ", JSON.stringify(responseData, null, 2));
+        return responseData.choices[0].message.content;
+
+    } catch (error) {
+        console.error("Error fetching OpenAI API response:", error);
+        return 'Error summarizing the text.';
+    }
+}
