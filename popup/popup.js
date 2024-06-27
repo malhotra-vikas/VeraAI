@@ -43,16 +43,21 @@ async function updateDynamicData(dynamicData, selectedText) {
 
     // Call OpenAI to summarize the quote
     jsonData = await evaluateAccuracy(selectedText, dynamicData);
-    const summary = jsonData.summary
+    let summary = jsonData.summary
     const sitesCheckedCount = jsonData.sitesChecked
     const sitesVerifiedCount = jsonData.sitesVerified
     const checkedSitesList = jsonData.checkedSites
     const verificationDetailsList = jsonData.verificationDetails
+    const targetSiteCount = checkedSitesList.length
 
     let accuracyScore = (sitesVerifiedCount / sitesCheckedCount) * 100;
 
-    // Rounding the accuracy score to one decimal place
-    accuracyScore = accuracyScore.toFixed(1);
+    if (sitesCheckedCount === 0) {
+        accuracyScore = 0
+    }
+
+    // Rounding the accuracy score to the nearest whole number
+    accuracyScore = Math.round(accuracyScore);
 
     // Format as percentage
     accuracyScore = accuracyScore + "%"
@@ -61,19 +66,28 @@ async function updateDynamicData(dynamicData, selectedText) {
 
     // Populate the popup with dynamic data
     document.getElementById('accuracy-score').innerText = accuracyScore;
+    document.getElementById('verified-count').innerText = targetSiteCount;
+
+    let validationCount = 0
 
     const sourceList = document.getElementById('source-list');
     sourceList.innerHTML = ''; // Clear existing sources if any
-    dynamicData.sources.forEach(source => {
-        const li = document.createElement('li');
-        const a = document.createElement('a');
-        a.href = source.url;
-        a.target = '_blank';
-        a.innerText = source.url;
-        li.appendChild(a);
-        li.appendChild(document.createTextNode(` References found: ${source.references}`));
-        sourceList.appendChild(li);
+    verificationDetailsList.forEach(detail => {
+        const verifiedStatus = detail.verified
+        if (verifiedStatus === "True") {
+            const li = document.createElement('li');
+            const a = document.createElement('a');
+            a.href = detail.source;
+            a.target = '_blank';
+            a.innerText = detail.source;
+            li.appendChild(a);
+            li.appendChild(document.createTextNode(` Verfied: ${detail.verified}`));
+            sourceList.appendChild(li);
+            validationCount = validationCount + 1 
+        }
     });
+
+    summary = "According to <b>" + validationCount + " verified sources </b>." + summary
 
     document.getElementById('summary').innerHTML = summary;
 }
