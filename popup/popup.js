@@ -1,5 +1,8 @@
 console.debug("popup.js script loaded.");
 
+// Replace with your OpenAI API key
+const apiKey = ""; // Replace this is a Test Key
+
 document.addEventListener('DOMContentLoaded', function () {
     console.log("Popup DOM content loaded.");
 
@@ -36,10 +39,28 @@ document.addEventListener('DOMContentLoaded', function () {
 
 async function updateDynamicData(dynamicData, selectedText) {
     // Call OpenAI to summarize the quote
-    const summarizedQuote = await summarizeQuoteWithOpenAI(selectedText);
+    //const summarizedQuote = await summarizeQuoteWithOpenAI(selectedText);
+
+    // Call OpenAI to summarize the quote
+    jsonData = await evaluateAccuracy(selectedText, dynamicData);
+    const summary = jsonData.summary
+    const sitesCheckedCount = jsonData.sitesChecked
+    const sitesVerifiedCount = jsonData.sitesVerified
+    const checkedSitesList = jsonData.checkedSites
+    const verificationDetailsList = jsonData.verificationDetails
+
+    let accuracyScore = (sitesVerifiedCount / sitesCheckedCount) * 100;
+
+    // Rounding the accuracy score to one decimal place
+    accuracyScore = accuracyScore.toFixed(1);
+
+    // Format as percentage
+    accuracyScore = accuracyScore + "%"
+
+    console.debug("VERA accuracyScore : ", accuracyScore);
 
     // Populate the popup with dynamic data
-    document.getElementById('accuracy-score').innerText = '32%';
+    document.getElementById('accuracy-score').innerText = accuracyScore;
 
     const sourceList = document.getElementById('source-list');
     sourceList.innerHTML = ''; // Clear existing sources if any
@@ -54,31 +75,70 @@ async function updateDynamicData(dynamicData, selectedText) {
         sourceList.appendChild(li);
     });
 
-    document.getElementById('summary').innerHTML = summarizedQuote;
+    document.getElementById('summary').innerHTML = summary;
 }
 
 
-async function summarizeQuoteWithOpenAI(quote) {
-    try {
-        // Replace with your OpenAI API key
-        const apiKey = "SOME KEY"; // Replace this is a Test Key
+async function evaluateAccuracy(quote) {
 
+    try {
+
+        // Load JSON data from the local extension directory
+        const responseJSON = await fetch('../categoryDictionary.json');
+        const categoryData = await responseJSON.json();
+
+
+        // Extract all URLs from the JSON data
+        const allowedSites = [];
+        for (const category in categoryData) {
+            for (const siteName in categoryData[category]) {
+                allowedSites.push(categoryData[category][siteName].URL);
+            }
+        }
+        
+        
         // OpenAI API endpoint
         const url = 'https://api.openai.com/v1/chat/completions';
 
-        // Request payload
-        const data = {
-            prompt: `Summarize the following text:\n\n${quote}\n`,
-            max_tokens: 100
-        };
-    
+        let prompt = `Verify authenticity of this statement:\n\n${quote}\n\nInclude the count of sites where the information was verified as well as how many sites you checked. Only use these sites: ${allowedSites.join(', ')}`;
+
+        console.debug("OpenAI API prompt: ", prompt);
+
         const body = JSON.stringify({
-            model: "gpt-3.5-turbo",
+            model: "gpt-4o",
             messages: [
-                { role: "system", content: "You are a helpful assistant." },
-                { role: "user", content: `Summarize the following text:\n\n${quote}` }
+                {role: "system", content: "You are a helpful assistant that verifies information by citing multiple sources. You only return a JSON response"},
+                { role: "user", content: `Verify authenticity of this statement:: Supreme Court appears to side with Biden admin in abortion case, according to draft briefly posted on website. Include the count of sites where the information was verified as well as how many sites you checked. Include the count of sites where the information was verified as well as how many sites you checked. ` },
+                {role: "system", content: `{
+        "checkedSites": [
+            "site url",
+            "site url",
+            "site url",
+            "site url"
+        ],
+        "verificationDetails": [
+            {
+                "source": "Politico",
+                "verified": "True"
+                "details": "Reports indicate that the Supreme Court seems poised to side with the Biden administration on a key abortion-related case concerning the Emergency Medical Treatment and Labor Act (EMTALA)."
+            },
+            {
+                "source": "theSkimm",
+                "verified": "False"
+            },
+            {
+                "source": "NY1",
+                "verified": "True"
+                "details": "Highlighted that the Supreme Court appeared likely to support the Biden administration in this dispute."
+            }
+        ],
+        "sitesChecked": 6,
+        "sitesVerified": 4,
+        "summary": "The Supreme Court appears to side with Biden admin in a key abortion case. Information verified across multiple credible sources."
+    }`},
+                { role: "user", content:  prompt}
             ],
-            max_tokens: 200
+            max_tokens: 1200
         });
         
         console.debug("OpenAI API Body: ", JSON.stringify(body, null, 2));
@@ -101,9 +161,25 @@ async function summarizeQuoteWithOpenAI(quote) {
         }
     
         const responseData = await response.json();
+        let verifiedResponseData
+        let jsonData
+        console.debug("OpenAI API responseData: ", JSON.stringify(responseData, null, 2));
 
-        console.debug("OpenAI API response: ", JSON.stringify(responseData, null, 2));
-        return responseData.choices[0].message.content;
+        if (responseData && responseData.choices) {
+            verifiedResponseData = responseData.choices[0].message.content
+            // Remove Markdown code block syntax to isolate the JSON string
+            verifiedResponseData = verifiedResponseData.replace(/```json\n|\n```/g, '');
+
+            console.debug("OpenAI API verifiedResponseData String: ", verifiedResponseData);
+
+            jsonData = JSON.parse(verifiedResponseData);
+        }
+
+        if (jsonData) [
+            console.debug("OpenAI API jsonData to process : ", JSON.stringify(jsonData, null, 2))
+        ]
+
+        return jsonData;
 
     } catch (error) {
         console.error("Error fetching OpenAI API response:", error);

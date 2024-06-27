@@ -1,0 +1,46 @@
+{
+    "checkedSites": [
+        "site url",
+        "site url",
+        "site url",
+        "site url"
+    ],
+    "verificationResults": [
+        {
+            "site": "site url",
+            "verified": false
+        },
+        {
+            "site": "site url",
+            "verified": true,
+            "details": "20 words summary"
+        },
+        {
+            "site": "site url",
+            "verified": true,
+            "details": "20 words summary"
+        },
+        {
+            "site": "site url",
+            "verified": true,
+            "details": "20 words summary"
+        },
+        {
+            "site": "site url",
+            "verified": false
+        },
+        {
+            "site": "site url",
+            "verified": false
+        },
+        {
+            "site": "site url",
+            "verified": true,
+            "details": "20 words summary"
+        }        
+    ],
+    "summary": {
+        "countSitesChecked": "count of site checked",
+        "countSitesVerified": "count where the content was verified"
+    }
+}

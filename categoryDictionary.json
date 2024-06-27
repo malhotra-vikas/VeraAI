@@ -1,86 +1,266 @@
 {
-    "News and General Information": {
-      "BBC News": "https://www.bbc.com/news",
-      "Reuters": "https://www.reuters.com",
-      "The New York Times": "https://www.nytimes.com",
-      "CNN": "https://www.cnn.com",
-      "The Guardian": "https://www.theguardian.com"
+  "News and General Information": {
+    "BBC News": {
+      "URL": "https://www.bbc.com/news",
+      "Weight": 1.0
     },
-    "Science and Technology": {
-      "National Aeronautics and Space Administration (NASA)": "https://www.nasa.gov",
-      "MIT Technology Review": "https://www.technologyreview.com",
-      "Scientific American": "https://www.scientificamerican.com",
-      "Nature": "https://www.nature.com",
-      "Ars Technica": "https://www.arstechnica.com"
+    "Reuters": {
+      "URL": "https://www.reuters.com",
+      "Weight": 1.0
     },
-    "Health and Medicine": {
-      "Mayo Clinic": "https://www.mayoclinic.org",
-      "WebMD": "https://www.webmd.com",
-      "Centers for Disease Control and Prevention (CDC)": "https://www.cdc.gov",
-      "National Institutes of Health (NIH)": "https://www.nih.gov",
-      "World Health Organization (WHO)": "https://www.who.int"
+    "The New York Times": {
+      "URL": "https://www.nytimes.com",
+      "Weight": 0.9
     },
-    "Finance and Business": {
-      "Bloomberg": "https://www.bloomberg.com",
-      "Forbes": "https://www.forbes.com",
-      "The Wall Street Journal": "https://www.wsj.com",
-      "Financial Times": "https://www.ft.com",
-      "MarketWatch": "https://www.marketwatch.com"
+    "CNN": {
+      "URL": "https://www.cnn.com",
+      "Weight": 0.8
     },
-    "Education and Research": {
-      "Google Scholar": "https://scholar.google.com",
-      "JSTOR": "https://www.jstor.org",
-      "ERIC (Education Resources Information Center)": "https://eric.ed.gov",
-      "Coursera Blog": "https://blog.coursera.org",
-      "Khan Academy": "https://www.khanacademy.org"
-    },
-    "Environment and Sustainability": {
-      "Environmental Protection Agency (EPA)": "https://www.epa.gov",
-      "World Wildlife Fund (WWF)": "https://www.worldwildlife.org",
-      "Greenpeace": "https://www.greenpeace.org",
-      "National Geographic": "https://www.nationalgeographic.com",
-      "The Nature Conservancy": "https://www.nature.org"
-    },
-    "Politics and Government": {
-      "GovTrack": "https://www.govtrack.us",
-      "Politico": "https://www.politico.com",
-      "FactCheck.org": "https://www.factcheck.org",
-      "ProPublica": "https://www.propublica.org",
-      "Congress.gov": "https://www.congress.gov"
-    },
-    "Entertainment and Culture": {
-      "IMDb": "https://www.imdb.com",
-      "Rolling Stone": "https://www.rollingstone.com",
-      "Variety": "https://www.variety.com",
-      "The Hollywood Reporter": "https://www.hollywoodreporter.com",
-      "Billboard": "https://www.billboard.com"
-    },
-    "Sports": {
-      "ESPN": "https://www.espn.com",
-      "Sports Illustrated": "https://www.si.com",
-      "BBC Sport": "https://www.bbc.com/sport",
-      "Bleacher Report": "https://www.bleacherreport.com",
-      "Sky Sports": "https://www.skysports.com"
-    },
-    "Lifestyle and Wellness": {
-      "MindBodyGreen": "https://www.mindbodygreen.com",
-      "The Spruce": "https://www.thespruce.com",
-      "Real Simple": "https://www.realsimple.com",
-      "Verywell Fit": "https://www.verywellfit.com",
-      "Healthline": "https://www.healthline.com"
-    },
-    "Technology and Gadgets": {
-      "TechCrunch": "https://www.techcrunch.com",
-      "The Verge": "https://www.theverge.com",
-      "Wired": "https://www.wired.com",
-      "CNET": "https://www.cnet.com",
-      "Gizmodo": "https://www.gizmodo.com"
-    },
-    "Travel and Leisure": {
-      "Lonely Planet": "https://www.lonelyplanet.com",
-      "Condé Nast Traveler": "https://www.cntraveler.com",
-      "Travel + Leisure": "https://www.travelandleisure.com",
-      "National Geographic Travel": "https://www.nationalgeographic.com/travel",
-      "TripAdvisor": "https://www.tripadvisor.com"
+    "The Guardian": {
+      "URL": "https://www.theguardian.com",
+      "Weight": 0.9
     }
-  }  
+  },
+  "Science and Technology": {
+    "National Aeronautics and Space Administration (NASA)": {
+      "URL": "https://www.nasa.gov",
+      "Weight": 1.0
+    },
+    "MIT Technology Review": {
+      "URL": "https://www.technologyreview.com",
+      "Weight": 0.9
+    },
+    "Scientific American": {
+      "URL": "https://www.scientificamerican.com",
+      "Weight": 0.9
+    },
+    "Nature": {
+      "URL": "https://www.nature.com",
+      "Weight": 1.0
+    },
+    "Ars Technica": {
+      "URL": "https://www.arstechnica.com",
+      "Weight": 0.8
+    }
+  },
+  "Health and Medicine": {
+    "Mayo Clinic": {
+      "URL": "https://www.mayoclinic.org",
+      "Weight": 1.0
+    },
+    "WebMD": {
+      "URL": "https://www.webmd.com",
+      "Weight": 0.8
+    },
+    "Centers for Disease Control and Prevention (CDC)": {
+      "URL": "https://www.cdc.gov",
+      "Weight": 1.0
+    },
+    "National Institutes of Health (NIH)": {
+      "URL": "https://www.nih.gov",
+      "Weight": 1.0
+    },
+    "World Health Organization (WHO)": {
+      "URL": "https://www.who.int",
+      "Weight": 1.0
+    }
+  },
+  "Finance and Business": {
+    "Bloomberg": {
+      "URL": "https://www.bloomberg.com",
+      "Weight": 0.9
+    },
+    "Forbes": {
+      "URL": "https://www.forbes.com",
+      "Weight": 0.8
+    },
+    "The Wall Street Journal": {
+      "URL": "https://www.wsj.com",
+      "Weight": 0.9
+    },
+    "Financial Times": {
+      "URL": "https://www.ft.com",
+      "Weight": 0.9
+    },
+    "MarketWatch": {
+      "URL": "https://www.marketwatch.com",
+      "Weight": 0.8
+    }
+  },
+  "Education and Research": {
+    "Google Scholar": {
+      "URL": "https://scholar.google.com",
+      "Weight": 1.0
+    },
+    "JSTOR": {
+      "URL": "https://www.jstor.org",
+      "Weight": 1.0
+    },
+    "ERIC (Education Resources Information Center)": {
+      "URL": "https://eric.ed.gov",
+      "Weight": 0.9
+    },
+    "Coursera Blog": {
+      "URL": "https://blog.coursera.org",
+      "Weight": 0.8
+    },
+    "Khan Academy": {
+      "URL": "https://www.khanacademy.org",
+      "Weight": 0.9
+    }
+  },
+  "Environment and Sustainability": {
+    "Environmental Protection Agency (EPA)": {
+      "URL": "https://www.epa.gov",
+      "Weight": 1.0
+    },
+    "World Wildlife Fund (WWF)": {
+      "URL": "https://www.worldwildlife.org",
+      "Weight": 0.9
+    },
+    "Greenpeace": {
+      "URL": "https://www.greenpeace.org",
+      "Weight": 0.8
+    },
+    "National Geographic": {
+      "URL": "https://www.nationalgeographic.com",
+      "Weight": 0.9
+    },
+    "The Nature Conservancy": {
+      "URL": "https://www.nature.org",
+      "Weight": 0.9
+    }
+  },
+  "Politics and Government": {
+    "GovTrack": {
+      "URL": "https://www.govtrack.us",
+      "Weight": 0.9
+    },
+    "Politico": {
+      "URL": "https://www.politico.com",
+      "Weight": 0.8
+    },
+    "FactCheck.org": {
+      "URL": "https://www.factcheck.org",
+      "Weight": 0.9
+    },
+    "ProPublica": {
+      "URL": "https://www.propublica.org",
+      "Weight": 0.9
+    },
+    "Congress.gov": {
+      "URL": "https://www.congress.gov",
+      "Weight": 1.0
+    }
+  },
+  "Entertainment and Culture": {
+    "IMDb": {
+      "URL": "https://www.imdb.com",
+      "Weight": 0.9
+    },
+    "Rolling Stone": {
+      "URL": "https://www.rollingstone.com",
+      "Weight": 0.8
+    },
+    "Variety": {
+      "URL": "https://www.variety.com",
+      "Weight": 0.8
+    },
+    "The Hollywood Reporter": {
+      "URL": "https://www.hollywoodreporter.com",
+      "Weight": 0.8
+    },
+    "Billboard": {
+      "URL": "https://www.billboard.com",
+      "Weight": 0.8
+    }
+  },
+  "Sports": {
+    "ESPN": {
+      "URL": "https://www.espn.com",
+      "Weight": 0.9
+    },
+    "Sports Illustrated": {
+      "URL": "https://www.si.com",
+      "Weight": 0.9
+    },
+    "BBC Sport": {
+      "URL": "https://www.bbc.com/sport",
+      "Weight": 0.9
+    },
+    "Bleacher Report": {
+      "URL": "https://www.bleacherreport.com",
+      "Weight": 0.8
+    },
+    "Sky Sports": {
+      "URL": "https://www.skysports.com",
+      "Weight": 0.8
+    }
+  },
+  "Lifestyle and Wellness": {
+    "MindBodyGreen": {
+      "URL": "https://www.mindbodygreen.com",
+      "Weight": 0.7
+    },
+    "The Spruce": {
+      "URL": "https://www.thespruce.com",
+      "Weight": 0.7
+    },
+    "Real Simple": {
+      "URL": "https://www.realsimple.com",
+      "Weight": 0.8
+    },
+    "Verywell Fit": {
+      "URL": "https://www.verywellfit.com",
+      "Weight": 0.8
+    },
+    "Healthline": {
+      "URL": "https://www.healthline.com",
+      "Weight": 0.9
+    }
+  },
+  "Technology and Gadgets": {
+    "TechCrunch": {
+      "URL": "https://www.techcrunch.com",
+      "Weight": 0.8
+    },
+    "The Verge": {
+      "URL": "https://www.theverge.com",
+      "Weight": 0.8
+    },
+    "Wired": {
+      "URL": "https://www.wired.com",
+      "Weight": 0.9
+    },
+    "CNET": {
+      "URL": "https://www.cnet.com",
+      "Weight": 0.8
+    },
+    "Gizmodo": {
+      "URL": "https://www.gizmodo.com",
+      "Weight": 0.7
+    }
+  },
+  "Travel and Leisure": {
+    "Lonely Planet": {
+      "URL": "https://www.lonelyplanet.com",
+      "Weight": 0.9
+    },
+    "Cond\u00e9 Nast Traveler": {
+      "URL": "https://www.cntraveler.com",
+      "Weight": 0.9
+    },
+    "Travel + Leisure": {
+      "URL": "https://www.travelandleisure.com",
+      "Weight": 0.8
+    },
+    "National Geographic Travel": {
+      "URL": "https://www.nationalgeographic.com/travel",
+      "Weight": 0.9
+    },
+    "TripAdvisor": {
+      "URL": "https://www.tripadvisor.com",
+      "Weight": 0.8
+    }
+  }
+}
