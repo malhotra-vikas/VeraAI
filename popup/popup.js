@@ -1,10 +1,79 @@
 console.debug("popup.js script loaded.");
 // Replace with your OpenAI API key
-const apiKey = ""; // Replace this is a Test Key
+const openai_apiKey = "sk-proj-Od7Q4ejtPcP71DzNnua8T3BlbkFJipnXU0aoXjmjFQjoJUR0"; // Replace this is a Test Key
 
 document.addEventListener('DOMContentLoaded', function () {
     console.log("Popup DOM content loaded.");
 
+    // Authenticate the user with Google
+    authenticateUser();
+});
+
+function authenticateUser() {
+    chrome.identity.getAuthToken({ interactive: true }, function (token) {
+        const authStatusElement = document.getElementById('auth-status');
+        if (chrome.runtime.lastError) {
+            console.error(chrome.runtime.lastError);
+        } else {
+            console.log('Token:', token);
+            // Retrieve the user's profile information
+            getUserInfo();
+        }
+    });
+}
+
+function getUserInfo() {
+    chrome.identity.getAuthToken({interactive: false}, function(token) {
+        if (chrome.runtime.lastError) {
+            console.log(chrome.runtime.lastError);
+            return;
+        }
+
+        // Construct the API request
+        const xhr = new XMLHttpRequest();
+        xhr.open('GET', 'https://www.googleapis.com/oauth2/v1/userinfo?alt=json');
+        xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+
+        xhr.onload = function() {
+            if (xhr.status === 200) {
+                // Parse the user info JSON
+                const userInfo = JSON.parse(xhr.responseText);
+                const emailElement = document.getElementById('user-email');
+                if (userInfo.email) {
+                    emailElement.textContent = `${userInfo.email}`;
+                } else {
+                    emailElement.textContent = 'Email not available';
+                }
+            } else {
+                console.error(`Failed to fetch user info: ${xhr.statusText}`);
+            }
+        };
+
+        xhr.onerror = function() {
+            console.error('Network error');
+        };
+
+        xhr.send();
+    });
+
+    initializePopupContent()
+}
+
+function logoutUser() {
+    chrome.identity.getAuthToken({ interactive: false }, function (token) {
+        if (token) {
+            chrome.identity.removeCachedAuthToken({ token: token }, function () {
+                console.log('Token removed');
+                // Optionally, you can update the UI or notify the user
+                document.getElementById('auth-status').textContent = 'Logged out';
+                // Reload or redirect to handle re-authentication
+                location.reload();
+            });
+        }
+    });
+}
+
+function initializePopupContent() {
     // Retrieve the selected text from storage
     chrome.storage.local.get(['selectedText', 'url'], async function (result) {
         const selectedText = result.selectedText || 'No text selected';
@@ -13,21 +82,51 @@ document.addEventListener('DOMContentLoaded', function () {
         console.log("Retrieved selected text from storage: ", selectedText);
         console.log("Retrieved URL from storage: ", pageUrl);
 
-            // Populate the popup with dynamic data
-            document.getElementById('url').innerText = pageUrl;
-            document.getElementById('quote').innerText = selectedText;
+        // Populate the popup with dynamic data
+        document.getElementById('url').innerText = pageUrl;
+        document.getElementById('quote').innerText = selectedText;
 
-            // Call the function to update the popup with dynamic data
-            updateDynamicData(selectedText);
-        });
+        // Call the function to update the popup with dynamic data
+        updateDynamicData(selectedText);
     });
+}
 
 async function updateDynamicData(selectedText) {
     // Call OpenAI to summarize the quote
     //const summarizedQuote = await summarizeQuoteWithOpenAI(selectedText);
 
+    matchedCategory = await evaluateCategory(selectedText);
+
+    // Pick the sites from the matched category. Else look up on all
+    // Load JSON data from the local extension directory
+    const responseJSON = await fetch('../categoryDictionary.json');
+    const categoryData = await responseJSON.json();
+    
+    
+    // Extract all URLs from the JSON data
+    const allowedSites = [];
+    let matchedAtLeastOneCategory = false
+    for (const category in categoryData) {
+        if (category === matchedCategory) {
+            for (const siteName in categoryData[category]) {
+                allowedSites.push(categoryData[category][siteName].URL);
+            }
+            matchedAtLeastOneCategory = true  
+        }
+    }
+    
+    if (matchedAtLeastOneCategory === false) {
+        for (const category in categoryData) {
+            for (const siteName in categoryData[category]) {
+                allowedSites.push(categoryData[category][siteName].URL);
+            }
+        }
+    }
+
     // Call OpenAI to summarize the quote
-    jsonData = await evaluateAccuracy(selectedText);
+    jsonData = await evaluateAccuracy(selectedText, allowedSites);
+
+    console.log("The jsonData for populating dynamic content = ", jsonData)
     let summary = jsonData.summary
     const sitesCheckedCount = jsonData.sitesChecked
     const sitesVerifiedCount = jsonData.sitesVerified
@@ -83,6 +182,7 @@ async function updateDynamicData(selectedText) {
             li.appendChild(document.createTextNode(` Verfied: ${detail.verified}`));
             sourceList.appendChild(li);
             validationCount = validationCount + 1
+
         }
     });
 
@@ -91,11 +191,82 @@ async function updateDynamicData(selectedText) {
     document.getElementById('summary').innerHTML = summary;
 }
 
+async function evaluateCategory(quote) {
+        // Load JSON data from the local extension directory
+        const responseJSON = await fetch('../categoryDictionary.json');
+        const categoryData = await responseJSON.json();
 
-async function evaluateAccuracy(quote) {
+        console.log("Eval categoryData ", categoryData)
+
+        // Extract all URLs from the JSON data
+        const allowedSites = [];
+        const allCategories = [];
+        for (const category in categoryData) {
+            allCategories.push(category);
+        }
+        console.log("Eval allCategories ", allCategories)
+
+    try {
+        // OpenAI API endpoint
+        const url = 'https://api.openai.com/v1/chat/completions';
+
+        let prompt = `What is the category of this statemnent:\n\n${quote}\n\nPick one Category from among these categories: ${allCategories.join(', ')}. Only return the name of the Category`;
+
+        console.debug("OpenAI API prompt: ", prompt);
+
+        const body = JSON.stringify({
+            model: "gpt-4o",
+            messages: [
+                { role: "system", content: "You are a helpful assistant that can find the right category that and text belong to" },
+                { role: "user", content: prompt }
+            ],
+            max_tokens: 1200
+        });
+
+        console.debug("OpenAI API Body: ", JSON.stringify(body, null, 2));
+
+        // Request headers
+        const headers = {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${openai_apiKey}`
+        };
+        console.debug("OpenAI API Header: ", JSON.stringify(headers, null, 2));
+
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: headers,
+            body: body
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const responseData = await response.json();
+        let matchedCategory
+        console.debug("OpenAI API responseData: ", JSON.stringify(responseData, null, 2));
+
+        if (responseData && responseData.choices) {
+            matchedCategory = responseData.choices[0].message.content
+            // Remove Markdown code block syntax to isolate the JSON string
+            matchedCategory = matchedCategory.replace(/```json\n|\n```/g, '');
+
+            console.debug("OpenAI API verifiedResponseData String: ", matchedCategory);
+        }
+
+        return matchedCategory;
+
+    } catch (error) {
+        console.error("Error fetching OpenAI API response:", error);
+        return 'Error summarizing the text.';
+    }
+}
+
+async function evaluateAccuracy(quote, allowedSites) {
 
     try {
 
+        /*
         // Load JSON data from the local extension directory
         const responseJSON = await fetch('../categoryDictionary.json');
         const categoryData = await responseJSON.json();
@@ -108,7 +279,7 @@ async function evaluateAccuracy(quote) {
                 allowedSites.push(categoryData[category][siteName].URL);
             }
         }
-
+        */
 
         // OpenAI API endpoint
         const url = 'https://api.openai.com/v1/chat/completions';
@@ -132,16 +303,16 @@ async function evaluateAccuracy(quote) {
         ],
         "verificationDetails": [
             {
-                "source": "Politico",
+                "source": "SOme Site 1",
                 "verified": "True"
                 "details": "Reports indicate that the Supreme Court seems poised to side with the Biden administration on a key abortion-related case concerning the Emergency Medical Treatment and Labor Act (EMTALA)."
             },
             {
-                "source": "theSkimm",
+                "source": "SOme Site 2",
                 "verified": "False"
             },
             {
-                "source": "NY1",
+                "source": "SOme Site 3",
                 "verified": "True"
                 "details": "Highlighted that the Supreme Court appeared likely to support the Biden administration in this dispute."
             }
@@ -160,7 +331,7 @@ async function evaluateAccuracy(quote) {
         // Request headers
         const headers = {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${apiKey}`
+            'Authorization': `Bearer ${openai_apiKey}`
         };
         console.debug("OpenAI API Header: ", JSON.stringify(headers, null, 2));
 

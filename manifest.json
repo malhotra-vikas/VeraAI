@@ -7,7 +7,8 @@
         "activeTab",
         "contextMenus",
         "scripting",
-        "storage"
+        "storage",
+        "identity"
     ],
     "background": {
         "service_worker": "background.js"
@@ -15,15 +16,29 @@
     "action": {
         "default_popup": "popup/popup.html",
         "default_icon": {
-            "16": "icons/16V.png",
-            "48": "icons/48V.png",
-            "128": "icons/128V.png"
+            "16": "icons/icon-16V.png",
+            "48": "icons/icon-48V.png",
+            "128": "icons/icon-128V.png"
         }
     },
     "web_accessible_resources": [
         {
-          "resources": ["categoryDictionary.json"],
-          "matches": ["<all_urls>"]
+            "resources": [
+                "categoryDictionary.json"
+            ],
+            "matches": [
+                "<all_urls>"
+            ]
         }
-      ]    
+    ],
+    "oauth2": {
+        "client_id": "609810805658-vbnrl7ghocjv3ln2i73kfj59irr5b1m4.apps.googleusercontent.com",
+        "scopes": [
+            "profile",
+            "email"
+        ]
+    },
+    "content_security_policy": {
+        "extension_pages": "script-src 'self'; object-src 'self'"
+    }
 }
