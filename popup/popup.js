@@ -1,5 +1,4 @@
 console.debug("popup.js script loaded.");
-
 // Replace with your OpenAI API key
 const apiKey = ""; // Replace this is a Test Key
 
@@ -14,35 +13,21 @@ document.addEventListener('DOMContentLoaded', function () {
         console.log("Retrieved selected text from storage: ", selectedText);
         console.log("Retrieved URL from storage: ", pageUrl);
 
-        // Example dynamic data (replace with your actual data source)
-        const dynamicData = {
-            url: pageUrl,
-            accuracyScore: '82%',
-            quote: selectedText,
-            sources: [
-                { url: 'https://www.marketwatch.com/investing/stock/djt', references: 14 },
-                { url: 'https://www.axios.com/2024/04/09/trump-truth-social', references: 15 },
-                { url: 'https://www.bloomberg.com/quote/DJT:US', references: 14 },
-                { url: 'https://www.barrons.com/articles/djt-truth-social', references: 13 }
-            ],
-            summary: 'According to <strong>287</strong> verified sources, the stock price for DJT has moved only in the range of 4% in the past few days.'
-        };
+            // Populate the popup with dynamic data
+            document.getElementById('url').innerText = pageUrl;
+            document.getElementById('quote').innerText = selectedText;
 
-        // Populate the popup with dynamic data
-        document.getElementById('url').innerText = dynamicData.url;
-        document.getElementById('quote').innerText = dynamicData.quote;
-
-        // Call the function to update the popup with dynamic data
-        updateDynamicData(dynamicData, selectedText);
+            // Call the function to update the popup with dynamic data
+            updateDynamicData(selectedText);
+        });
     });
-});
 
-async function updateDynamicData(dynamicData, selectedText) {
+async function updateDynamicData(selectedText) {
     // Call OpenAI to summarize the quote
     //const summarizedQuote = await summarizeQuoteWithOpenAI(selectedText);
 
     // Call OpenAI to summarize the quote
-    jsonData = await evaluateAccuracy(selectedText, dynamicData);
+    jsonData = await evaluateAccuracy(selectedText);
     let summary = jsonData.summary
     const sitesCheckedCount = jsonData.sitesChecked
     const sitesVerifiedCount = jsonData.sitesVerified
@@ -66,6 +51,20 @@ async function updateDynamicData(dynamicData, selectedText) {
 
     // Populate the popup with dynamic data
     document.getElementById('accuracy-score').innerText = accuracyScore;
+
+    // Update the CSS to show the circle color based on the Score
+    var scoreElement = document.getElementById('accuracy-score');
+    var score = parseInt(accuracyScore); // Get the score as an integer
+    var scoreCircleCSS = scoreElement.parentNode; // This is the .score-circle div
+    if (score >= 80) {
+        scoreCircleCSS.style.borderColor = '#4caf50'; // Green for scores 80 and above
+    } else if (score >= 50) {
+        scoreCircleCSS.style.borderColor = '#ffeb3b'; // Yellow for scores 50 to 79
+    } else {
+        scoreCircleCSS.style.borderColor = '#f44336'; // Red for scores below 50
+    }
+
+
     document.getElementById('verified-count').innerText = targetSiteCount;
 
     let validationCount = 0
@@ -83,7 +82,7 @@ async function updateDynamicData(dynamicData, selectedText) {
             li.appendChild(a);
             li.appendChild(document.createTextNode(` Verfied: ${detail.verified}`));
             sourceList.appendChild(li);
-            validationCount = validationCount + 1 
+            validationCount = validationCount + 1
         }
     });
 
@@ -109,8 +108,8 @@ async function evaluateAccuracy(quote) {
                 allowedSites.push(categoryData[category][siteName].URL);
             }
         }
-        
-        
+
+
         // OpenAI API endpoint
         const url = 'https://api.openai.com/v1/chat/completions';
 
@@ -121,9 +120,10 @@ async function evaluateAccuracy(quote) {
         const body = JSON.stringify({
             model: "gpt-4o",
             messages: [
-                {role: "system", content: "You are a helpful assistant that verifies information by citing multiple sources. You only return a JSON response"},
+                { role: "system", content: "You are a helpful assistant that verifies information by citing multiple sources. You only return a JSON response" },
                 { role: "user", content: `Verify authenticity of this statement:: Supreme Court appears to side with Biden admin in abortion case, according to draft briefly posted on website. Include the count of sites where the information was verified as well as how many sites you checked. Include the count of sites where the information was verified as well as how many sites you checked. ` },
-                {role: "system", content: `{
+                {
+                    role: "system", content: `{
         "checkedSites": [
             "site url",
             "site url",
@@ -150,11 +150,11 @@ async function evaluateAccuracy(quote) {
         "sitesVerified": 4,
         "summary": "The Supreme Court appears to side with Biden admin in a key abortion case. Information verified across multiple credible sources."
     }`},
-                { role: "user", content:  prompt}
+                { role: "user", content: prompt }
             ],
             max_tokens: 1200
         });
-        
+
         console.debug("OpenAI API Body: ", JSON.stringify(body, null, 2));
 
         // Request headers
@@ -169,11 +169,11 @@ async function evaluateAccuracy(quote) {
             headers: headers,
             body: body
         });
-        
+
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
-    
+
         const responseData = await response.json();
         let verifiedResponseData
         let jsonData
