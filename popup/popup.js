@@ -1,6 +1,6 @@
 console.debug("popup.js script loaded.");
 // Replace with your OpenAI API key
-const openai_apiKey = "sk-proj-Od7Q4ejtPcP71DzNnua8T3BlbkFJipnXU0aoXjmjFQjoJUR0"; // Replace this is a Test Key
+const openai_apiKey = ""; // Replace this is a Test Key
 
 document.addEventListener('DOMContentLoaded', function () {
     console.log("Popup DOM content loaded.");
