@@ -1,5 +1,5 @@
 // Replace with your OpenAI API key
-const openai_apiKey = "sk-proj-wjEG3smCKqEZSmOwAtj2T3BlbkFJOLK9lGCChlKTBrAFvV66"; // Replace this is a Test Key
+const openai_apiKey = ""; // Replace this is a Test Key
 const stripePaymentLink = "https://buy.stripe.com/test_bIY8zKcwI8Qb8c8eUU"
 
 document.addEventListener('DOMContentLoaded', function () {
