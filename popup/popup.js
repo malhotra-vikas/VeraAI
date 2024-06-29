@@ -1,21 +1,24 @@
-console.debug("popup.js script loaded.");
 // Replace with your OpenAI API key
-const openai_apiKey = ""; // Replace this is a Test Key
+const openai_apiKey = "sk-proj-wjEG3smCKqEZSmOwAtj2T3BlbkFJOLK9lGCChlKTBrAFvV66"; // Replace this is a Test Key
+const stripePaymentLink = "https://buy.stripe.com/test_bIY8zKcwI8Qb8c8eUU"
 
 document.addEventListener('DOMContentLoaded', function () {
-    console.log("Popup DOM content loaded.");
-
     // Authenticate the user with Google
     authenticateUser();
 });
 
+document.getElementById('payButton').addEventListener('click', () => {
+    const paymentLink = stripePaymentLink
+    chrome.tabs.create({ url: paymentLink });
+  });
+
+  
 function authenticateUser() {
     chrome.identity.getAuthToken({ interactive: true }, function (token) {
         const authStatusElement = document.getElementById('auth-status');
         if (chrome.runtime.lastError) {
             console.error(chrome.runtime.lastError);
         } else {
-            console.log('Token:', token);
             // Retrieve the user's profile information
             getUserInfo();
         }
@@ -23,7 +26,7 @@ function authenticateUser() {
 }
 
 function getUserInfo() {
-    chrome.identity.getAuthToken({interactive: false}, function(token) {
+    chrome.identity.getAuthToken({ interactive: false }, function (token) {
         if (chrome.runtime.lastError) {
             console.log(chrome.runtime.lastError);
             return;
@@ -34,12 +37,13 @@ function getUserInfo() {
         xhr.open('GET', 'https://www.googleapis.com/oauth2/v1/userinfo?alt=json');
         xhr.setRequestHeader('Authorization', `Bearer ${token}`);
 
-        xhr.onload = function() {
+        xhr.onload = function () {
             if (xhr.status === 200) {
                 // Parse the user info JSON
                 const userInfo = JSON.parse(xhr.responseText);
                 const emailElement = document.getElementById('user-email');
                 if (userInfo.email) {
+                    console.log('email:', userInfo.email);
                     emailElement.textContent = `${userInfo.email}`;
                 } else {
                     emailElement.textContent = 'Email not available';
@@ -49,7 +53,7 @@ function getUserInfo() {
             }
         };
 
-        xhr.onerror = function() {
+        xhr.onerror = function () {
             console.error('Network error');
         };
 
@@ -59,28 +63,11 @@ function getUserInfo() {
     initializePopupContent()
 }
 
-function logoutUser() {
-    chrome.identity.getAuthToken({ interactive: false }, function (token) {
-        if (token) {
-            chrome.identity.removeCachedAuthToken({ token: token }, function () {
-                console.log('Token removed');
-                // Optionally, you can update the UI or notify the user
-                document.getElementById('auth-status').textContent = 'Logged out';
-                // Reload or redirect to handle re-authentication
-                location.reload();
-            });
-        }
-    });
-}
-
 function initializePopupContent() {
     // Retrieve the selected text from storage
     chrome.storage.local.get(['selectedText', 'url'], async function (result) {
         const selectedText = result.selectedText || 'No text selected';
         const pageUrl = result.url || 'No URL available';
-
-        console.log("Retrieved selected text from storage: ", selectedText);
-        console.log("Retrieved URL from storage: ", pageUrl);
 
         // Populate the popup with dynamic data
         document.getElementById('url').innerText = pageUrl;
@@ -101,8 +88,8 @@ async function updateDynamicData(selectedText) {
     // Load JSON data from the local extension directory
     const responseJSON = await fetch('../categoryDictionary.json');
     const categoryData = await responseJSON.json();
-    
-    
+
+
     // Extract all URLs from the JSON data
     const allowedSites = [];
     let matchedAtLeastOneCategory = false
@@ -111,10 +98,10 @@ async function updateDynamicData(selectedText) {
             for (const siteName in categoryData[category]) {
                 allowedSites.push(categoryData[category][siteName].URL);
             }
-            matchedAtLeastOneCategory = true  
+            matchedAtLeastOneCategory = true
         }
     }
-    
+
     if (matchedAtLeastOneCategory === false) {
         for (const category in categoryData) {
             for (const siteName in categoryData[category]) {
@@ -128,11 +115,35 @@ async function updateDynamicData(selectedText) {
 
     console.log("The jsonData for populating dynamic content = ", jsonData)
     let summary = jsonData.summary
-    const sitesCheckedCount = jsonData.sitesChecked
-    const sitesVerifiedCount = jsonData.sitesVerified
-    const checkedSitesList = jsonData.checkedSites
+    let sitesCheckedCount = jsonData.sitesChecked
+    let sitesVerifiedCount = jsonData.sitesVerified
+    //const checkedSitesList = jsonData.checkedSites
     const verificationDetailsList = jsonData.verificationDetails
-    const targetSiteCount = checkedSitesList.length
+    const targetSiteCount = verificationDetailsList.length
+
+    document.getElementById('verified-count').innerText = targetSiteCount;
+
+    let validationCount = 0
+    sitesVerifiedCount = 0
+    sitesCheckedCount = verificationDetailsList.length
+
+    const sourceList = document.getElementById('source-list');
+    sourceList.innerHTML = ''; // Clear existing sources if any
+    verificationDetailsList.forEach(detail => {
+        const verifiedStatus = detail.verified
+        if (verifiedStatus === "True") {
+            const li = document.createElement('li');
+            const a = document.createElement('a');
+            a.href = detail.source;
+            a.target = '_blank';
+            a.innerText = detail.source;
+            li.appendChild(a);
+            li.appendChild(document.createTextNode(` Verfied: ${detail.verified}`));
+            sourceList.appendChild(li);
+            validationCount = validationCount + 1
+            sitesVerifiedCount = sitesVerifiedCount + 1
+        }
+    });
 
     let accuracyScore = (sitesVerifiedCount / sitesCheckedCount) * 100;
 
@@ -164,47 +175,25 @@ async function updateDynamicData(selectedText) {
     }
 
 
-    document.getElementById('verified-count').innerText = targetSiteCount;
-
-    let validationCount = 0
-
-    const sourceList = document.getElementById('source-list');
-    sourceList.innerHTML = ''; // Clear existing sources if any
-    verificationDetailsList.forEach(detail => {
-        const verifiedStatus = detail.verified
-        if (verifiedStatus === "True") {
-            const li = document.createElement('li');
-            const a = document.createElement('a');
-            a.href = detail.source;
-            a.target = '_blank';
-            a.innerText = detail.source;
-            li.appendChild(a);
-            li.appendChild(document.createTextNode(` Verfied: ${detail.verified}`));
-            sourceList.appendChild(li);
-            validationCount = validationCount + 1
-
-        }
-    });
-
     summary = "According to <b>" + validationCount + " verified sources </b>." + summary
 
     document.getElementById('summary').innerHTML = summary;
 }
 
 async function evaluateCategory(quote) {
-        // Load JSON data from the local extension directory
-        const responseJSON = await fetch('../categoryDictionary.json');
-        const categoryData = await responseJSON.json();
+    // Load JSON data from the local extension directory
+    const responseJSON = await fetch('../categoryDictionary.json');
+    const categoryData = await responseJSON.json();
 
-        console.log("Eval categoryData ", categoryData)
+    console.log("Eval categoryData ", categoryData)
 
-        // Extract all URLs from the JSON data
-        const allowedSites = [];
-        const allCategories = [];
-        for (const category in categoryData) {
-            allCategories.push(category);
-        }
-        console.log("Eval allCategories ", allCategories)
+    // Extract all URLs from the JSON data
+    const allowedSites = [];
+    const allCategories = [];
+    for (const category in categoryData) {
+        allCategories.push(category);
+    }
+    console.log("Eval allCategories ", allCategories)
 
     try {
         // OpenAI API endpoint
@@ -220,7 +209,7 @@ async function evaluateCategory(quote) {
                 { role: "system", content: "You are a helpful assistant that can find the right category that and text belong to" },
                 { role: "user", content: prompt }
             ],
-            max_tokens: 1200
+            max_tokens: 3500
         });
 
         console.debug("OpenAI API Body: ", JSON.stringify(body, null, 2));
@@ -230,7 +219,6 @@ async function evaluateCategory(quote) {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${openai_apiKey}`
         };
-        console.debug("OpenAI API Header: ", JSON.stringify(headers, null, 2));
 
         const response = await fetch(url, {
             method: 'POST',
@@ -333,7 +321,6 @@ async function evaluateAccuracy(quote, allowedSites) {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${openai_apiKey}`
         };
-        console.debug("OpenAI API Header: ", JSON.stringify(headers, null, 2));
 
         const response = await fetch(url, {
             method: 'POST',
