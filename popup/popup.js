@@ -1,6 +1,7 @@
 // Replace with your OpenAI API key
-const openai_apiKey = ""; // Replace this is a Test Key
+const openai_apiKey = "sk-proj-fb5UrDsbSTDfQkYqRbrwT3BlbkFJFCxfPpdQAka4rhyvlDB8"; // Replace this is a Test Key
 const stripePaymentLink = "https://buy.stripe.com/test_bIY8zKcwI8Qb8c8eUU"
+const apiGatewayUrl = "https://z2867xo68i.execute-api.us-east-2.amazonaws.com/default/StoreVeraUsers"
 
 document.addEventListener('DOMContentLoaded', function () {
     // Authenticate the user with Google
@@ -10,9 +11,27 @@ document.addEventListener('DOMContentLoaded', function () {
 document.getElementById('payButton').addEventListener('click', () => {
     const paymentLink = stripePaymentLink
     chrome.tabs.create({ url: paymentLink });
-  });
+});
 
-  
+function storeUserEmail(email) {
+    console.log('Calling Lambda with :', email);
+
+    fetch(apiGatewayUrl, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email: email, timestamp: new Date().toISOString(), subscription_status: "New User"})
+    })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Success:', data);
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+        });
+}
+
 function authenticateUser() {
     chrome.identity.getAuthToken({ interactive: true }, function (token) {
         const authStatusElement = document.getElementById('auth-status');
@@ -23,6 +42,38 @@ function authenticateUser() {
             getUserInfo();
         }
     });
+}
+
+async function checkUserSubscription(email) {
+    try {
+        const response = await fetch(`${apiGatewayUrl}?email=${email}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        console.log("Full response is", response);
+
+        const data = await response.json();
+        console.log("Parsed data is", data);
+
+        if (data) {
+            // User exists.
+            if (data.subscription_status !== 'active') {
+                // Redirect to Stripe payment link
+                const paymentLink = stripePaymentLink;
+                chrome.tabs.create({ url: paymentLink });
+            } else {
+                console.log('Subscription is active');
+            }
+        } else {
+            // User does not exist, create user
+            storeUserEmail(email);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+    }
 }
 
 function getUserInfo() {
@@ -45,6 +96,7 @@ function getUserInfo() {
                 if (userInfo.email) {
                     console.log('email:', userInfo.email);
                     emailElement.textContent = `${userInfo.email}`;
+                    checkUserSubscription(userInfo.email);
                 } else {
                     emailElement.textContent = 'Email not available';
                 }
