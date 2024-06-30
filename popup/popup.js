@@ -1,5 +1,5 @@
 // Replace with your OpenAI API key
-const openai_apiKey = "sk-proj-fb5UrDsbSTDfQkYqRbrwT3BlbkFJFCxfPpdQAka4rhyvlDB8"; // Replace this is a Test Key
+const openai_apiKey = ""; // Replace this is a Test Key
 const stripePaymentLink = "https://buy.stripe.com/test_bIY8zKcwI8Qb8c8eUU"
 const apiGatewayUrl = "https://z2867xo68i.execute-api.us-east-2.amazonaws.com/default/StoreVeraUsers"
 
@@ -13,15 +13,16 @@ document.getElementById('payButton').addEventListener('click', () => {
     chrome.tabs.create({ url: paymentLink });
 });
 
-function storeUserEmail(email) {
+async function storeUserEmail(email) {
     console.log('Calling Lambda with :', email);
+    const trialCredits = '5';
 
     fetch(apiGatewayUrl, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ email: email, timestamp: new Date().toISOString(), subscription_status: "New User"})
+        body: JSON.stringify({ email: email, timestamp: new Date().toISOString(), subscription_status: "New User", credits: trialCredits })
     })
         .then(response => response.json())
         .then(data => {
@@ -58,18 +59,26 @@ async function checkUserSubscription(email) {
         const data = await response.json();
         console.log("Parsed data is", data);
 
-        if (data) {
+        // User does not exist, create user
+        if (data == "User not found") {
+            await storeUserEmail(email);
+        } else {
             // User exists.
             if (data.subscription_status !== 'active') {
-                // Redirect to Stripe payment link
-                const paymentLink = stripePaymentLink;
-                chrome.tabs.create({ url: paymentLink });
+                const userCredits = parseInt(data.credits, 10); // Convert userCredits to an integer
+
+                if (userCredits == 0) {
+                    console.log('Free Trial exipred');
+                    // Redirect to Stripe payment link
+                    const paymentLink = stripePaymentLink;
+                    chrome.tabs.create({ url: paymentLink });
+                } else {
+                    console.log('Free Trial in effect and active');
+                    decrementUserCredits(email)
+                }
             } else {
                 console.log('Subscription is active');
             }
-        } else {
-            // User does not exist, create user
-            storeUserEmail(email);
         }
     } catch (error) {
         console.error('Error:', error);
@@ -87,6 +96,7 @@ function getUserInfo() {
         const xhr = new XMLHttpRequest();
         xhr.open('GET', 'https://www.googleapis.com/oauth2/v1/userinfo?alt=json');
         xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+
 
         xhr.onload = function () {
             if (xhr.status === 200) {
@@ -230,6 +240,25 @@ async function updateDynamicData(selectedText) {
     summary = "According to <b>" + validationCount + " verified sources </b>." + summary
 
     document.getElementById('summary').innerHTML = summary;
+}
+
+function decrementUserCredits(email) {
+    console.log('Calling Lambda with :', email);
+
+    fetch(apiGatewayUrl, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email: email, timestamp: new Date().toISOString() })
+    })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Success:', data);
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+        });
 }
 
 async function evaluateCategory(quote) {
